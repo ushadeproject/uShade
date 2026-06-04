@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uShade - Privacy Streaming</title>
+    <style>
+        /* Sleek AMOLED Black theme */
+        body {
+            background-color: #000000; 
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+        }
+        
+        /* Your custom uShade Purple logo styling */
+        .app-logo {
+            width: 120px; 
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 15px; 
+        }
+        h1 {
+            color: #bf55ec; /* uShade Purple */
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #aaaaaa;
+            font-size: 1.1rem;
+        }
+        .search-box {
+            margin-top: 30px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: 2px solid #333333;
+            border-radius: 25px;
+            background-color: #121212;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #bf55ec;
+        }
+        button {
+            margin-top: 15px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            background-color: #bf55ec;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Video Player container rules */
+        #player-container {
+            margin-top: 30px;
+            display: none; /* Hidden until a video link is processed */
+            justify-content: center;
+        }
+        iframe {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border: 2px solid #333333;
+            border-radius: 12px;
+            box-shadow: 0px 10px 30px rgba(191, 85, 236, 0.2); /* Custom purple glow */
+        }
+        @media (max-width: 600px) {
+            iframe {
+                height: 250px; /* Responsive layout for phones */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="logo.png" alt="uShade Logo" class="app-logo">
+        <h1>uShade</h1>
+        <p>Your multi-platform ad-free streaming client.</p>
+
+        <div class="search-box">
+            <input type="text" id="videoUrl" placeholder="Paste YouTube link here...">
+            <br>
+            <button onclick="playVideo()">Stream Video</button>
+        </div>
+
+        <div id="player-container"></div>
+    </div>
+
+    <script>
+        // Array of self-healing privacy instances
+        const pipedInstances = [
+            "https://piped.video",
+            "https://cf.piped.video",
+            "https://nf.piped.video"
+        ];
+
+        function playVideo() {
+            const urlInput = document.getElementById('videoUrl').value.trim();
+            const playerContainer = document.getElementById('player-container');
+            
+            if (!urlInput) {
+                alert("Please paste a link first!");
+                return;
+            }
+
+            // Extract the unique Video ID from different YouTube URL styles
+            let videoId = "";
+            if (urlInput.includes("v=")) {
+                videoId = urlInput.split("v=")[1].split("&")[0];
+            } else if (urlInput.includes("youtu.be/")) {
+                videoId = urlInput.split("youtu.be/")[1].split("?")[0];
+            } else if (urlInput.includes("embed/")) {
+                videoId = urlInput.split("embed/")[1].split("?")[0];
+            } else {
+                // Fallback: assume raw text entered is the video ID
+                videoId = urlInput;
+            }
+
+            let currentInstanceIndex = 0;
+            
+            function loadPlayer() {
+                const activeInstance = pipedInstances[currentInstanceIndex];
+                
+                // Inject the secure HTML5 player embed 
+                playerContainer.innerHTML = `
+                    <iframe 
+                        src="${activeInstance}/embed/${videoId}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>`;
+                
+                playerContainer.style.display = "flex";
+                console.log(`Streaming via instance: ${activeInstance}`);
+            }
+
+            loadPlayer();
+        }
+    </script>
+</body>
+</html>
