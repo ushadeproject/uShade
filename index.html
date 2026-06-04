@@ -126,4 +126,217 @@
             text-align: left;
             color: #bf55ec;
             font-size: 1.5rem;
-            margin-
+            margin-bottom: 20px;
+            border-left: 4px solid #bf55ec;
+            padding-left: 10px;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+            text-align: left;
+        }
+        .video-card {
+            background-color: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: #bf55ec;
+        }
+        .thumbnail-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #111;
+        }
+        .thumbnail-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-info {
+            padding: 12px;
+        }
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3rem;
+            color: #fff;
+        }
+        .video-author {
+            font-size: 0.8rem;
+            color: #888;
+            margin: 0;
+        }
+        
+        /* Dynamic Loader Spinners */
+        .loader {
+            display: none;
+            margin: 40px auto;
+            border: 4px solid #111;
+            border-top: 4px solid #bf55ec;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand" onclick="loadTrendingPage()">
+            <img src="logo.png" alt="uShade Logo" class="app-logo" onerror="this.style.display='none'">
+            <h1>uShade</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="searchQuery" placeholder="Search for ad-free videos...">
+            <button onclick="executeSearch()">Search</button>
+        </div>
+
+        <div id="player-container">
+            <div class="iframe-wrapper">
+                <div id="player-target"></div>
+            </div>
+            <button class="close-btn" onclick="closePlayer()">Close Player</button>
+        </div>
+
+        <div class="loader" id="appLoader"></div>
+
+        <h2 class="section-title" id="feedTitle">Trending Videos</h2>
+        <div class="video-grid" id="contentGrid"></div>
+    </div>
+
+    <script>
+        // Highly reliable backend proxy nodes
+        const apiInstances = [
+            "https://inv.thepixora.com",
+            "https://invidious.f5.si",
+            "https://invidious.nerdvpn.de"
+        ];
+        let currentApiIndex = 0;
+
+        // Boot configuration
+        window.onload = function() {
+            loadTrendingPage();
+            
+            document.getElementById('searchQuery').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') executeSearch();
+            });
+        };
+
+        // Automatic engine rotation logic
+        async function fetchApiData(endpoint) {
+            document.getElementById('appLoader').style.display = 'block';
+            
+            for (let attempts = 0; attempts < apiInstances.length; attempts++) {
+                const activeBase = apiInstances[currentApiIndex];
+                try {
+                    const response = await fetch(`${activeBase}/api/v1/${endpoint}`);
+                    if (!response.ok) throw new Error("Server error");
+                    const data = await response.json();
+                    document.getElementById('appLoader').style.display = 'none';
+                    return data;
+                } catch (err) {
+                    console.warn(`Instance failed: ${activeBase}. Auto-switching...`);
+                    currentApiIndex = (currentApiIndex + 1) % apiInstances.length;
+                }
+            }
+            document.getElementById('appLoader').style.display = 'none';
+            alert("Privacy nodes are updating codes. Try clicking search again!");
+            return null;
+        }
+
+        async function loadTrendingPage() {
+            document.getElementById('feedTitle').innerText = "Trending Videos";
+            const data = await fetchApiData("trending?region=GB");
+            if (data) renderVideoGrid(data);
+        }
+
+        async function executeSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) return;
+
+            if (query.includes("youtu.be/") || query.includes("v=")) {
+                let directId = "";
+                if (query.includes("v=")) directId = query.split("v=")[1].split("&")[0];
+                else directId = query.split("youtu.be/")[1].split("?")[0];
+                launchCleanStream(directId);
+                return;
+            }
+
+            document.getElementById('feedTitle').innerText = `Results for: "${query}"`;
+            const data = await fetchApiData(`search?q=${encodeURIComponent(query)}&type=video`);
+            if (data) renderVideoGrid(data);
+        }
+
+        function renderVideoGrid(videos) {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = "";
+
+            videos.forEach(video => {
+                let thumbUrl = "";
+                if (video.videoThumbnails && video.videoThumbnails.length > 0) {
+                    thumbUrl = video.videoThumbnails.find(t => t.quality === "medium")?.url || video.videoThumbnails[0].url;
+                } else {
+                    thumbUrl = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.onclick = () => launchCleanStream(video.videoId);
+                
+                card.innerHTML = `
+                    <div class="thumbnail-box">
+                        <img src="${thumbUrl}" alt="Thumbnail" loading="lazy">
+                    </div>
+                    <div class="video-info">
+                        <p class="video-title">${video.title}</p>
+                        <p class="video-author">${video.author}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function launchCleanStream(id) {
+            const playerContainer = document.getElementById('player-container');
+            const playerTarget = document.getElementById('player-target');
+            const activeServer = apiInstances[currentApiIndex];
+
+            playerTarget.innerHTML = `
+                <iframe 
+                    src="${activeServer}/embed/${id}?autoplay=1" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>`;
+            
+            playerContainer.style.display = 'flex';
+            window.scrollTo({ top: playerContainer.offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function closePlayer() {
+            document.getElementById('player-container').style.display = 'none';
+            document.getElementById('player-target').innerHTML = "";
+        }
+    </script>
+</body>
+</html>
