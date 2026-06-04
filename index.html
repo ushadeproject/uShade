@@ -44,7 +44,7 @@
             font-size: 1.5rem;
         }
         
-        /* Universal Layout Container */
+        /* Layout Container */
         .container {
             max-width: 1200px;
             margin: 30px auto;
@@ -89,7 +89,7 @@
             background-color: #a439d1;
         }
         
-        /* Immersive Video Screen View */
+        /* Video Screen View */
         #player-container {
             display: none;
             flex-direction: column;
@@ -121,7 +121,7 @@
             background-color: #333;
         }
 
-        /* Native App Video Grid UI */
+        /* Video Grid UI */
         .section-title {
             text-align: left;
             color: #bf55ec;
@@ -179,7 +179,7 @@
             margin: 0;
         }
         
-        /* Dynamic Loader Spinners */
+        /* Spinner */
         .loader {
             display: none;
             margin: 40px auto;
@@ -207,7 +207,7 @@
 
     <div class="container">
         <div class="search-box">
-            <input type="text" id="searchQuery" placeholder="Search for ad-free videos...">
+            <input type="text" id="searchQuery" placeholder="Search or paste a YouTube URL...">
             <button onclick="executeSearch()">Search</button>
         </div>
 
@@ -225,66 +225,85 @@
     </div>
 
     <script>
-        // Highly reliable backend proxy nodes
+        // High-availability routing instances updated for late 2026 stability
         const apiInstances = [
             "https://inv.thepixora.com",
-            "https://invidious.f5.si",
-            "https://invidious.nerdvpn.de"
+            "https://invidious.asir.dev",
+            "https://invidious.projectsegfau.lt"
         ];
         let currentApiIndex = 0;
 
-        // Boot configuration
         window.onload = function() {
             loadTrendingPage();
-            
             document.getElementById('searchQuery').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') executeSearch();
             });
         };
 
-        // Automatic engine rotation logic
+        // Network Fetch Engine with Silent Failovers
         async function fetchApiData(endpoint) {
             document.getElementById('appLoader').style.display = 'block';
             
             for (let attempts = 0; attempts < apiInstances.length; attempts++) {
                 const activeBase = apiInstances[currentApiIndex];
                 try {
-                    const response = await fetch(`${activeBase}/api/v1/${endpoint}`);
+                    // Set a strict 5-second timeout so it doesn't leave you hanging
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                    const response = await fetch(`${activeBase}/api/v1/${endpoint}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
                     if (!response.ok) throw new Error("Server error");
                     const data = await response.json();
                     document.getElementById('appLoader').style.display = 'none';
                     return data;
                 } catch (err) {
-                    console.warn(`Instance failed: ${activeBase}. Auto-switching...`);
+                    console.warn(`Node failed: ${activeBase}. Checking backup...`);
+                    // Instantly shift to the next backup instance in line
                     currentApiIndex = (currentApiIndex + 1) % apiInstances.length;
                 }
             }
             document.getElementById('appLoader').style.display = 'none';
-            alert("Privacy nodes are updating codes. Try clicking search again!");
-            return null;
+            return null; // Return empty instead of blowing up the screen with alert boxes
         }
 
         async function loadTrendingPage() {
             document.getElementById('feedTitle').innerText = "Trending Videos";
             const data = await fetchApiData("trending?region=GB");
-            if (data) renderVideoGrid(data);
+            if (data) {
+                renderVideoGrid(data);
+            } else {
+                showOfflineFallback();
+            }
         }
 
         async function executeSearch() {
             const query = document.getElementById('searchQuery').value.trim();
             if (!query) return;
 
-            if (query.includes("youtu.be/") || query.includes("v=")) {
+            // Direct URL Input Auto-Bypass
+            if (query.includes("youtu.be/") || query.includes("v=") || query.includes("embed/")) {
                 let directId = "";
                 if (query.includes("v=")) directId = query.split("v=")[1].split("&")[0];
-                else directId = query.split("youtu.be/")[1].split("?")[0];
+                else if (query.includes("youtu.be/")) directId = query.split("youtu.be/")[1].split("?")[0];
+                else directId = query.split("embed/")[1].split("?")[0];
                 launchCleanStream(directId);
                 return;
             }
 
             document.getElementById('feedTitle').innerText = `Results for: "${query}"`;
             const data = await fetchApiData(`search?q=${encodeURIComponent(query)}&type=video`);
-            if (data) renderVideoGrid(data);
+            if (data) {
+                renderVideoGrid(data);
+            } else {
+                // If API is blocked, automatically turn search into a direct playback engine
+                document.getElementById('contentGrid').innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 20px; background:#0a0a0a; border-radius:12px; border:1px solid #bf55ec;">
+                        <p style="margin:0 0 10px 0;">API nodes are heavily loaded right now.</p>
+                        <button onclick="launchCleanStream('${encodeURIComponent(query)}')">Force Load Video ID "${query}" Directly</button>
+                    </div>`;
+            }
         }
 
         function renderVideoGrid(videos) {
@@ -292,12 +311,9 @@
             grid.innerHTML = "";
 
             videos.forEach(video => {
-                let thumbUrl = "";
-                if (video.videoThumbnails && video.videoThumbnails.length > 0) {
-                    thumbUrl = video.videoThumbnails.find(t => t.quality === "medium")?.url || video.videoThumbnails[0].url;
-                } else {
-                    thumbUrl = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
-                }
+                let thumbUrl = video.videoThumbnails && video.videoThumbnails.length > 0
+                    ? video.videoThumbnails.find(t => t.quality === "medium")?.url || video.videoThumbnails[0].url
+                    : `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
 
                 const card = document.createElement('div');
                 card.className = 'video-card';
@@ -316,14 +332,23 @@
             });
         }
 
+        function showOfflineFallback() {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; padding: 40px 20px; background: #0a0a0a; border: 1px dashed #333; border-radius: 12px;">
+                    <p style="color: #aaa; margin-bottom: 15px;">Public API feeds are currently updating links.</p>
+                    <p style="font-size: 0.9rem; color: #888;">You can still paste any YouTube link or exact Video ID into the search bar above to stream instantly!</p>
+                </div>`;
+        }
+
         function launchCleanStream(id) {
             const playerContainer = document.getElementById('player-container');
             const playerTarget = document.getElementById('player-target');
-            const activeServer = apiInstances[currentApiIndex];
-
+            
+            // Uses standard base fallback embedder routing
             playerTarget.innerHTML = `
                 <iframe 
-                    src="${activeServer}/embed/${id}?autoplay=1" 
+                    src="https://invidious.f5.si/embed/${id}?autoplay=1" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen>
