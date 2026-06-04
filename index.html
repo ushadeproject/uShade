@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>uShade - Privacy Streaming</title>
     <style>
-        /* Modern Dark Mode Settings */
+        /* Pure Dark Mode Theme */
         body {
             background-color: #000000;
             color: #ffffff;
@@ -15,7 +15,7 @@
             text-align: center;
         }
         
-        /* Fixed Navigation Header */
+        /* App Header */
         header {
             background-color: #0a0a0a;
             border-bottom: 2px solid #1a1a1a;
@@ -33,25 +33,19 @@
             gap: 10px;
             cursor: pointer;
         }
-        .app-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
         h1 {
             color: #bf55ec; /* uShade Purple */
             margin: 0;
             font-size: 1.5rem;
         }
         
-        /* Layout Container */
         .container {
             max-width: 1200px;
             margin: 30px auto;
             padding: 0 20px;
         }
         
-        /* Native Search Controls */
+        /* Custom Search Box */
         .search-box {
             display: flex;
             justify-content: center;
@@ -89,7 +83,7 @@
             background-color: #a439d1;
         }
         
-        /* Video Screen View */
+        /* Theater Player Container */
         #player-container {
             display: none;
             flex-direction: column;
@@ -121,7 +115,7 @@
             background-color: #333;
         }
 
-        /* Video Grid UI */
+        /* Video Feed Grid Layout */
         .section-title {
             text-align: left;
             color: #bf55ec;
@@ -178,36 +172,19 @@
             color: #888;
             margin: 0;
         }
-        
-        /* Spinner */
-        .loader {
-            display: none;
-            margin: 40px auto;
-            border: 4px solid #111;
-            border-top: 4px solid #bf55ec;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand" onclick="loadTrendingPage()">
-            <img src="logo.png" alt="uShade Logo" class="app-logo" onerror="this.style.display='none'">
+        <div class="brand" onclick="location.reload()">
             <h1>uShade</h1>
         </div>
     </header>
 
     <div class="container">
         <div class="search-box">
-            <input type="text" id="searchQuery" placeholder="Search or paste a YouTube URL...">
+            <input type="text" id="searchQuery" placeholder="Search for ad-free videos...">
             <button onclick="executeSearch()">Search</button>
         </div>
 
@@ -218,150 +195,105 @@
             <button class="close-btn" onclick="closePlayer()">Close Player</button>
         </div>
 
-        <div class="loader" id="appLoader"></div>
-
-        <h2 class="section-title" id="feedTitle">Trending Videos</h2>
+        <h2 class="section-title" id="feedTitle">Recommended Videos</h2>
         <div class="video-grid" id="contentGrid"></div>
     </div>
 
     <script>
-        // High-availability routing instances updated for late 2026 stability
-        const apiInstances = [
-            "https://inv.thepixora.com",
-            "https://invidious.asir.dev",
-            "https://invidious.projectsegfau.lt"
-        ];
-        let currentApiIndex = 0;
-
+        // Use a bulletproof, high-speed open search engine script configuration
         window.onload = function() {
-            loadTrendingPage();
+            // Load a default set of clean music/videos on startup so it's never blank
+            executeDefaultFeed();
+            
             document.getElementById('searchQuery').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') executeSearch();
             });
         };
 
-        // Network Fetch Engine with Silent Failovers
-        async function fetchApiData(endpoint) {
-            document.getElementById('appLoader').style.display = 'block';
-            
-            for (let attempts = 0; attempts < apiInstances.length; attempts++) {
-                const activeBase = apiInstances[currentApiIndex];
-                try {
-                    // Set a strict 5-second timeout so it doesn't leave you hanging
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                    const response = await fetch(`${activeBase}/api/v1/${endpoint}`, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-
-                    if (!response.ok) throw new Error("Server error");
-                    const data = await response.json();
-                    document.getElementById('appLoader').style.display = 'none';
-                    return data;
-                } catch (err) {
-                    console.warn(`Node failed: ${activeBase}. Checking backup...`);
-                    // Instantly shift to the next backup instance in line
-                    currentApiIndex = (currentApiIndex + 1) % apiInstances.length;
-                }
-            }
-            document.getElementById('appLoader').style.display = 'none';
-            return null; // Return empty instead of blowing up the screen with alert boxes
-        }
-
-        async function loadTrendingPage() {
-            document.getElementById('feedTitle').innerText = "Trending Videos";
-            const data = await fetchApiData("trending?region=GB");
-            if (data) {
-                renderVideoGrid(data);
-            } else {
-                showOfflineFallback();
-            }
+        async function executeDefaultFeed() {
+            // High speed layout initialization sequence
+            const queries = ['trending music', 'gaming mixes', 'lofi beats'];
+            const fallbackQuery = queries[Math.floor(Math.random() * queries.length)];
+            fetchSearchResults(fallbackQuery);
         }
 
         async function executeSearch() {
             const query = document.getElementById('searchQuery').value.trim();
             if (!query) return;
 
-            // Direct URL Input Auto-Bypass
-            if (query.includes("youtu.be/") || query.includes("v=") || query.includes("embed/")) {
+            // Instantly bypass if user pastes a direct video url link
+            if (query.includes("youtu.be/") || query.includes("v=")) {
                 let directId = "";
                 if (query.includes("v=")) directId = query.split("v=")[1].split("&")[0];
-                else if (query.includes("youtu.be/")) directId = query.split("youtu.be/")[1].split("?")[0];
-                else directId = query.split("embed/")[1].split("?")[0];
+                else directId = query.split("youtu.be/")[1].split("?")[0];
                 launchCleanStream(directId);
                 return;
             }
 
             document.getElementById('feedTitle').innerText = `Results for: "${query}"`;
-            const data = await fetchApiData(`search?q=${encodeURIComponent(query)}&type=video`);
-            if (data) {
-                renderVideoGrid(data);
-            } else {
-                // If API is blocked, automatically turn search into a direct playback engine
-                document.getElementById('contentGrid').innerHTML = `
-                    <div style="grid-column: 1/-1; padding: 20px; background:#0a0a0a; border-radius:12px; border:1px solid #bf55ec;">
-                        <p style="margin:0 0 10px 0;">API nodes are heavily loaded right now.</p>
-                        <button onclick="launchCleanStream('${encodeURIComponent(query)}')">Force Load Video ID "${query}" Directly</button>
-                    </div>`;
+            fetchSearchResults(query);
+        }
+
+        // Direct No-Block Content Scraper Engine
+        async function fetchSearchResults(keyword) {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = "<p style='grid-column:1/-1; color:#888;'>Searching database safely...</p>";
+            
+            try {
+                // Connects directly via search proxy tunnel that can't be blocked by privacy nodes
+                const res = await fetch(`https://images${Math.floor(Math.random() * 3) + 1}-focus-opensocial.googleusercontent.com/gadgets/proxy?container=none&url=${encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(keyword))}`);
+                const html = await res.text();
+                
+                // Track down the video metadata inside the raw structure
+                const match = html.match(/ytInitialData\s*=\s*({.+?});/);
+                if (!match) throw new Error("Parse error");
+                
+                const data = JSON.parse(match[1]);
+                const contents = data.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents;
+                
+                grid.innerHTML = ""; // Wipe screen layout clear safely
+                let count = 0;
+
+                contents.forEach(item => {
+                    if (item.videoRenderer && count < 12) {
+                        const video = item.videoRenderer;
+                        const videoId = video.videoId;
+                        const title = video.title.runs[0].text;
+                        const author = video.ownerText.runs[0].text;
+                        const thumbUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                        
+                        count++;
+                        const card = document.createElement('div');
+                        card.className = 'video-card';
+                        card.onclick = () => launchCleanStream(videoId);
+                        
+                        card.innerHTML = `
+                            <div class="thumbnail-box">
+                                <img src="${thumbUrl}" alt="Thumbnail">
+                            </div>
+                            <div class="video-info">
+                                <p class="video-title">${title}</p>
+                                <p class="video-author">${author}</p>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    }
+                });
+                
+                if (count === 0) showEmptyState();
+            } catch (err) {
+                console.error(err);
+                showEmptyState();
             }
         }
 
-        function renderVideoGrid(videos) {
-            const grid = document.getElementById('contentGrid');
-            grid.innerHTML = "";
-
-            videos.forEach(video => {
-                let thumbUrl = video.videoThumbnails && video.videoThumbnails.length > 0
-                    ? video.videoThumbnails.find(t => t.quality === "medium")?.url || video.videoThumbnails[0].url
-                    : `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
-
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.onclick = () => launchCleanStream(video.videoId);
-                
-                card.innerHTML = `
-                    <div class="thumbnail-box">
-                        <img src="${thumbUrl}" alt="Thumbnail" loading="lazy">
-                    </div>
-                    <div class="video-info">
-                        <p class="video-title">${video.title}</p>
-                        <p class="video-author">${video.author}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function showOfflineFallback() {
-            const grid = document.getElementById('contentGrid');
-            grid.innerHTML = `
-                <div style="grid-column: 1/-1; padding: 40px 20px; background: #0a0a0a; border: 1px dashed #333; border-radius: 12px;">
-                    <p style="color: #aaa; margin-bottom: 15px;">Public API feeds are currently updating links.</p>
-                    <p style="font-size: 0.9rem; color: #888;">You can still paste any YouTube link or exact Video ID into the search bar above to stream instantly!</p>
+        function showEmptyState() {
+            document.getElementById('contentGrid').innerHTML = `
+                <div style="grid-column: 1/-1; padding: 30px; background: #0a0a0a; border: 1px dashed #333; border-radius:12px;">
+                    <p style="color:#aaa;">Search channel is busy right now.</p>
+                    <p style="font-size:0.9rem; color:#666;">Type an exact YouTube video link right into the bar above to launch it instantly!</p>
                 </div>`;
         }
 
+        // Click to Play Launcher Execution Block
         function launchCleanStream(id) {
-            const playerContainer = document.getElementById('player-container');
-            const playerTarget = document.getElementById('player-target');
-            
-            // Uses standard base fallback embedder routing
-            playerTarget.innerHTML = `
-                <iframe 
-                    src="https://invidious.f5.si/embed/${id}?autoplay=1" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>`;
-            
-            playerContainer.style.display = 'flex';
-            window.scrollTo({ top: playerContainer.offsetTop - 100, behavior: 'smooth' });
-        }
-
-        function closePlayer() {
-            document.getElementById('player-container').style.display = 'none';
-            document.getElementById('player-target').innerHTML = "";
-        }
-    </script>
-</body>
-</html>
