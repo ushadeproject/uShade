@@ -5,44 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>uShade - Privacy Streaming</title>
     <style>
-        /* Sleek AMOLED Black theme */
+        /* Modern Dark Mode Settings */
         body {
-            background-color: #000000; 
+            background-color: #000000;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
             margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
+            padding: 0;
+            text-align: center;
         }
         
-        /* Your custom uShade Purple logo styling */
+        /* Fixed Navigation Header */
+        header {
+            background-color: #0a0a0a;
+            border-bottom: 2px solid #1a1a1a;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
         .app-logo {
-            width: 120px; 
-            height: auto;
-            margin-bottom: 10px;
-            border-radius: 15px; 
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
         }
         h1 {
             color: #bf55ec; /* uShade Purple */
-            font-size: 2.5rem;
-            margin-bottom: 5px;
+            margin: 0;
+            font-size: 1.5rem;
         }
-        p {
-            color: #aaaaaa;
-            font-size: 1.1rem;
+        
+        /* Universal Layout Container */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
+        
+        /* Native Search Controls */
         .search-box {
-            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
         }
         input[type="text"] {
-            width: 80%;
+            width: 100%;
+            max-width: 500px;
             padding: 12px 20px;
             font-size: 1rem;
-            border: 2px solid #333333;
+            border: 2px solid #222;
             border-radius: 25px;
             background-color: #121212;
             color: white;
@@ -53,8 +74,7 @@
             border-color: #bf55ec;
         }
         button {
-            margin-top: 15px;
-            padding: 12px 30px;
+            padding: 12px 25px;
             font-size: 1rem;
             background-color: #bf55ec;
             color: white;
@@ -62,98 +82,267 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
         }
         button:hover {
             transform: scale(1.05);
+            background-color: #a439d1;
         }
-
-        /* Video Player container rules */
+        
+        /* Immersive Video Screen View */
         #player-container {
-            margin-top: 30px;
-            display: none; /* Hidden until a video link is processed */
-            justify-content: center;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #222;
+        }
+        .iframe-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 854px;
+            aspect-ratio: 16 / 9;
         }
         iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 800px;
-            height: 450px;
-            border: 2px solid #333333;
+            height: 100%;
+            border: 2px solid #333;
             border-radius: 12px;
-            box-shadow: 0px 10px 30px rgba(191, 85, 236, 0.2); /* Custom purple glow */
+            box-shadow: 0px 10px 40px rgba(191, 85, 236, 0.25);
         }
-        @media (max-width: 600px) {
-            iframe {
-                height: 250px; /* Responsive layout for phones */
-            }
+        .close-btn {
+            margin-top: 15px;
+            background-color: #333;
+        }
+
+        /* Native App Video Grid UI */
+        .section-title {
+            text-align: left;
+            color: #bf55ec;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-left: 4px solid #bf55ec;
+            padding-left: 10px;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+            text-align: left;
+        }
+        .video-card {
+            background-color: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: #bf55ec;
+        }
+        .thumbnail-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #111;
+        }
+        .thumbnail-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-info {
+            padding: 12px;
+        }
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3rem;
+            color: #fff;
+        }
+        .video-author {
+            font-size: 0.8rem;
+            color: #888;
+            margin: 0;
+        }
+        
+        /* Dynamic Loader Spinners */
+        .loader {
+            display: none;
+            margin: 40px auto;
+            border: 4px solid #111;
+            border-top: 4px solid #bf55ec;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <img src="logo.png" alt="uShade Logo" class="app-logo">
-        <h1>uShade</h1>
-        <p>Your multi-platform ad-free streaming client.</p>
+    <header>
+        <div class="brand" onclick="loadTrendingPage()">
+            <img src="logo.png" alt="uShade Logo" class="app-logo" onerror="this.style.display='none'">
+            <h1>uShade</h1>
+        </div>
+    </header>
 
+    <div class="container">
         <div class="search-box">
-            <input type="text" id="videoUrl" placeholder="Paste YouTube link here...">
-            <br>
-            <button onclick="playVideo()">Stream Video</button>
+            <input type="text" id="searchQuery" placeholder="Search for ad-free videos...">
+            <button onclick="executeSearch()">Search</button>
         </div>
 
-        <div id="player-container"></div>
+        <div id="player-container">
+            <div class="iframe-wrapper">
+                <div id="player-target"></div>
+            </div>
+            <button class="close-btn" onclick="closePlayer()">Close Player</button>
+        </div>
+
+        <div class="loader" id="appLoader"></div>
+
+        <h2 class="section-title" id="feedTitle">Trending Videos</h2>
+        <div class="video-grid" id="contentGrid"></div>
     </div>
 
     <script>
-        // Array of self-healing privacy instances
-        const pipedInstances = [
-            "https://piped.video",
-            "https://cf.piped.video",
-            "https://nf.piped.video"
+        // Set up bulletproof architecture using open Invidious data engines
+        const apiInstances = [
+            "https://inv.tux.digital",
+            "https://invidious.nerdvpn.de",
+            "https://yewtu.be"
         ];
+        let currentApiIndex = 0;
 
-        function playVideo() {
-            const urlInput = document.getElementById('videoUrl').value.trim();
-            const playerContainer = document.getElementById('player-container');
+        // Boot configuration
+        window.onload = function() {
+            loadTrendingPage();
             
-            if (!urlInput) {
-                alert("Please paste a link first!");
+            // Allow typing 'Enter' inside the search input box
+            document.getElementById('searchQuery').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') executeSearch();
+            });
+        };
+
+        // Network Request Engine with Auto Fallback Architecture
+        async function fetchApiData(endpoint) {
+            document.getElementById('appLoader').style.display = 'block';
+            
+            for (let attempts = 0; attempts < apiInstances.length; attempts++) {
+                const activeBase = apiInstances[currentApiIndex];
+                try {
+                    const response = await fetch(`${activeBase}/api/v1/${endpoint}`);
+                    if (!response.ok) throw new Error("Server response error");
+                    const data = await response.json();
+                    document.getElementById('appLoader').style.display = 'none';
+                    return data;
+                } catch (err) {
+                    console.warn(`Instance failed: ${activeBase}. Switching connections...`);
+                    currentApiIndex = (currentApiIndex + 1) % apiInstances.length;
+                }
+            }
+            document.getElementById('appLoader').style.display = 'none';
+            alert("All privacy nodes are busy right now. Please try again in a few seconds!");
+            return null;
+        }
+
+        // Feature 1: Populate Custom Trending Interface Feed
+        async function loadTrendingPage() {
+            document.getElementById('feedTitle').innerText = "Trending Videos";
+            const data = await fetchApiData("trending?region=GB"); // Tailored region parameters
+            if (data) renderVideoGrid(data);
+        }
+
+        // Feature 2: Execute Deep System Metadata Search
+        async function executeSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) return;
+
+            // Direct Link Integration Bypass Check
+            if (query.includes("youtu.be/") || query.includes("v=")) {
+                let directId = "";
+                if (query.includes("v=")) directId = query.split("v=")[1].split("&")[0];
+                else directId = query.split("youtu.be/")[1].split("?")[0];
+                launchCleanStream(directId);
                 return;
             }
 
-            // Extract the unique Video ID from different YouTube URL styles
-            let videoId = "";
-            if (urlInput.includes("v=")) {
-                videoId = urlInput.split("v=")[1].split("&")[0];
-            } else if (urlInput.includes("youtu.be/")) {
-                videoId = urlInput.split("youtu.be/")[1].split("?")[0];
-            } else if (urlInput.includes("embed/")) {
-                videoId = urlInput.split("embed/")[1].split("?")[0];
-            } else {
-                // Fallback: assume raw text entered is the video ID
-                videoId = urlInput;
-            }
+            document.getElementById('feedTitle').innerText = `Results for: "${query}"`;
+            const data = await fetchApiData(`search?q=${encodeURIComponent(query)}&type=video`);
+            if (data) renderVideoGrid(data);
+        }
 
-            let currentInstanceIndex = 0;
+        // Feature 3: Native Rendering Component Engine
+        function renderVideoGrid(videos) {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = ""; // Clear active layout elements safely
+
+            videos.forEach(video => {
+                // Ensure proper thumbnail resolution assignment
+                let thumbUrl = "";
+                if (video.videoThumbnails && video.videoThumbnails.length > 0) {
+                    thumbUrl = video.videoThumbnails.find(t => t.quality === "medium")?.url || video.videoThumbnails[0].url;
+                } else {
+                    thumbUrl = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.onclick = () => launchCleanStream(video.videoId);
+                
+                card.innerHTML = `
+                    <div class="thumbnail-box">
+                        <img src="${thumbUrl}" alt="Video Thumbnail" loading="lazy">
+                    </div>
+                    <div class="video-info">
+                        <p class="video-title">${video.title}</p>
+                        <p class="video-author">${video.author}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Feature 4: Immersive Overlay Player Execution
+        function launchCleanStream(id) {
+            const playerContainer = document.getElementById('player-container');
+            const playerTarget = document.getElementById('player-target');
+            const activeServer = apiInstances[currentApiIndex];
+
+            playerTarget.innerHTML = `
+                <iframe 
+                    src="${activeServer}/embed/${id}?autoplay=1&listen=0" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>`;
             
-            function loadPlayer() {
-                const activeInstance = pipedInstances[currentInstanceIndex];
-                
-                // Inject the secure HTML5 player embed 
-                playerContainer.innerHTML = `
-                    <iframe 
-                        src="${activeInstance}/embed/${videoId}" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>`;
-                
-                playerContainer.style.display = "flex";
-                console.log(`Streaming via instance: ${activeInstance}`);
-            }
+            playerContainer.style.display = 'flex';
+            window.scrollTo({ top: playerContainer.offsetTop - 100, behavior: 'smooth' });
+        }
 
-            loadPlayer();
+        function closePlayer() {
+            document.getElementById('player-container').style.display = 'none';
+            document.getElementById('player-target').innerHTML = ""; // Hard drop resources to save memory
         }
     </script>
 </body>
